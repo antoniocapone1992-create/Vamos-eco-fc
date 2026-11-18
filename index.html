@@ -1062,8 +1062,8 @@
             const val = parseFloat(value);
             if (!isNaN(val) && val >= 0) {
                 finances[playerName] = val;
-                window.dbSet(window.dbRef(window.db, 'vamos_finances'), finances).then(() => {
-                    renderFinancesTable();
+                window.dbSet(window.dbRef(window.db, 'vamos_finances'), finances).catch((error) => {
+                    alert('Errore di salvataggio su Firebase: ' + error.message);
                 });
             } else {
                 alert('Inserisci un importo valido.');
