@@ -1058,11 +1058,13 @@
             document.getElementById('total-collected').innerText = totalCollected + ' €';
         }
 
-        function updatePaidAmount(playerName, value) {
+                function updatePaidAmount(playerName, value) {
             const val = parseFloat(value);
             if (!isNaN(val) && val >= 0) {
                 finances[playerName] = val;
-                window.dbSet(window.dbRef(window.db, 'vamos_finances'), finances).catch((error) => {
+                window.dbSet(window.dbRef(window.db, 'vamos_finances'), finances).then(() => {
+                    renderFinancesTable();
+                }).catch((error) => {
                     alert('Errore di salvataggio su Firebase: ' + error.message);
                 });
             } else {
@@ -1070,6 +1072,7 @@
                 renderFinancesTable();
             }
         }
+
     </script>
 </body>
 </html>
