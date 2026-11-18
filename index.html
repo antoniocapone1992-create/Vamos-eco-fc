@@ -1015,7 +1015,7 @@
             document.getElementById('finanze-lock').classList.remove('hidden');
         }
 
-        function renderFinancesTable() {
+                function renderFinancesTable() {
             const tbody = document.getElementById('finanze-table-body');
             tbody.innerHTML = '';
             let totalCollected = 0;
@@ -1023,7 +1023,7 @@
 
             document.getElementById('quota-info-text').innerText = `Quota totale annua: ${QUOTA_TOTALE_ANNUA}€ • Quota dovuta corrente (al periodo attuale): ${quotaDovutaCorrente}€`;
 
-            roster.forEach(p => {
+            roster.forEach((p, i) => {
                 const paid = finances[p.nome] || 0;
                 totalCollected += paid;
                 
@@ -1045,7 +1045,7 @@
                     <td class="p-3.5 font-medium text-white">${p.nome}</td>
                     <td class="p-3.5 text-center text-slate-300 font-bold">${quotaDovutaCorrente} €</td>
                     <td class="p-3.5 text-center">
-                        <input type="number" value="${paid}" min="0" onchange="updatePaidAmount('${p.nome}', this.value)" class="w-24 bg-slate-950 border border-slate-700 text-white text-center text-xs rounded-lg p-1.5 outline-none focus:border-amber-500">
+                        <input type="number" value="${paid}" min="0" onchange="updatePaidAmount(${i}, this.value)" class="w-24 bg-slate-950 border border-slate-700 text-white text-center text-xs rounded-lg p-1.5 outline-none focus:border-amber-500">
                     </td>
                     <td class="p-3.5 text-center ${isCompliant ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}">${balanceHtml}</td>
                     <td class="p-3.5 text-center">
@@ -1058,10 +1058,11 @@
             document.getElementById('total-collected').innerText = totalCollected + ' €';
         }
 
-                function updatePaidAmount(playerName, value) {
+        function updatePaidAmount(index, value) {
+            const p = roster[index];
             const val = parseFloat(value);
             if (!isNaN(val) && val >= 0) {
-                finances[playerName] = val;
+                finances[p.nome] = val;
                 window.dbSet(window.dbRef(window.db, 'vamos_finances'), finances).then(() => {
                     renderFinancesTable();
                 }).catch((error) => {
