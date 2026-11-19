@@ -76,12 +76,25 @@
     <main class="max-w-7xl mx-auto px-4 py-6">
 
         <!-- 1. DASHBOARD -->
-        <section id="tab-dashboard" class="tab-content space-y-6">
-                        <div class="bg-gradient-to-r from-blue-900/60 via-indigo-900/60 to-slate-900 border border-blue-500/30 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-                <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl font-black"><i class="fa-solid fa-futbol"></i></div>
+                    <div id="next-match-card" class="bg-gradient-to-r from-blue-900/60 via-indigo-900/60 to-slate-900 border border-blue-500/30 rounded-2xl p-6 shadow-2xl relative overflow-hidden bg-cover bg-center transition-all duration-300">
+                <div id="next-match-overlay" class="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-blue-950/75 to-slate-950/85 pointer-events-none"></div>
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl font-black pointer-events-none"><i class="fa-solid fa-futbol"></i></div>
+                
                 <div class="relative z-10">
-                    <span class="bg-blue-500/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30 uppercase tracking-widest">Prossimo Incontro • 4ª Giornata</span>
-                    <h2 class="text-2xl md:text-3xl font-black mt-2 text-white">Vamos Eco FC vs Rione Alto</h2>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="bg-blue-500/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30 uppercase tracking-widest">Prossimo Incontro • 4ª Giornata</span>
+                        <div class="flex items-center gap-2">
+                            <label class="cursor-pointer bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all">
+                                <i class="fa-solid fa-image mr-1 text-amber-400"></i>Carica Sfondo
+                                <input type="file" id="match-bg-input" accept="image/*" onchange="handleMatchBgUpload(event)" class="hidden">
+                            </label>
+                            <button onclick="clearMatchBg()" id="clear-match-bg-btn" class="hidden bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-700/50 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all">
+                                <i class="fa-solid fa-trash mr-1"></i>Rimuovi
+                            </button>
+                        </div>
+                    </div>
+
+                    <h2 class="text-2xl md:text-3xl font-black mt-3 text-white">Vamos Eco FC vs Rione Alto</h2>
                     <p class="text-sm text-slate-300 mt-1"><i class="fa-regular fa-clock text-amber-400 mr-2"></i>Ven 20 nov 2026 • Ore 21:45 • Campo Arcoleo • Napoli League Bava</p>
                     
                     <div id="countdown" class="grid grid-cols-4 gap-3 max-w-md mt-6 text-center">
@@ -559,6 +572,9 @@
             window.dbOnValue(window.dbRef(window.db, 'vamos_votes'), (snap) => {
                 cloudVotes = snap.val() || {};
                 if (!document.getElementById('tab-vota').classList.contains('hidden')) renderVotingResults();
+                            window.dbOnValue(window.dbRef(window.db, 'vamos_next_match_bg'), (snap) => {
+                const bgData = snap.val();
+                applyMatchBg(bgData || localStorage.getItem('vamos_next_match_bg') || "");
             });
 
             window.dbOnValue(window.dbRef(window.db, 'vamos_roster'), (snap) => {
@@ -1160,6 +1176,62 @@
                 renderFinancesTable();
             }
         }
+        function applyMatchBg(dataUrl) {
+            const card = document.getElementById('next-match-card');
+            const clearBtn = document.getElementById('clear-match-bg-btn');
+            if (!card) return;
+
+            if (dataUrl) {
+                card.style.backgroundImage = `url("${dataUrl}")`;
+                if (clearBtn) clearBtn.classList.remove('hidden');
+            } else {
+                card.style.backgroundImage = "";
+                if (clearBtn) clearBtn.classList.add('hidden');
+            }
+        }
+
+        function handleMatchBgUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxWidth = 1280;
+                    const scale = Math.min(1, maxWidth / img.width);
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.72);
+
+                    localStorage.setItem('vamos_next_match_bg', compressedBase64);
+                    applyMatchBg(compressedBase64);
+
+                    if (window.db) {
+                        window.dbSet(window.dbRef(window.db, 'vamos_next_match_bg'), compressedBase64).catch((err) => {
+                            alert('Errore salvataggio sfondo su cloud: ' + err.message);
+                        });
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            event.target.value = "";
+        }
+
+        function clearMatchBg() {
+            localStorage.removeItem('vamos_next_match_bg');
+            applyMatchBg("");
+            if (window.db) {
+                window.dbSet(window.dbRef(window.db, 'vamos_next_match_bg'), null);
+            }
+        }
+
+        applyMatchBg(localStorage.getItem('vamos_next_match_bg') || "");
 
     </script>
 </body>
