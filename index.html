@@ -572,7 +572,8 @@
             window.dbOnValue(window.dbRef(window.db, 'vamos_votes'), (snap) => {
                 cloudVotes = snap.val() || {};
                 if (!document.getElementById('tab-vota').classList.contains('hidden')) renderVotingResults();
-                            window.dbOnValue(window.dbRef(window.db, 'vamos_next_match_bg'), (snap) => {
+            });
+            window.dbOnValue(window.dbRef(window.db, 'vamos_next_match_bg'), (snap) => {
                 const bgData = snap.val();
                 applyMatchBg(bgData || localStorage.getItem('vamos_next_match_bg') || "");
             });
